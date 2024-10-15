@@ -1,6 +1,7 @@
 package br.com.todo.todo.services;
 
 import br.com.todo.todo.dtos.UserDTO;
+import br.com.todo.todo.models.Todo;
 import br.com.todo.todo.models.User;
 import br.com.todo.todo.repository.UserRepository;
 import br.com.todo.todo.security.TokenService;
@@ -8,6 +9,7 @@ import ch.qos.logback.core.subst.Token;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Set;
 import java.util.List;
 
 import org.springframework.data.domain.Sort;
@@ -20,11 +22,13 @@ public class UserService {
     private UserRepository userRepository;
     private PasswordEncoder passwordEncoder;
     private TokenService tokenService;
+    private TodoService todoService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, TokenService tokenService){
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, TokenService tokenService, TodoService todoService){
         this.userRepository = userRepository;
         this.tokenService = tokenService;
         this.passwordEncoder = passwordEncoder;
+        this.todoService = todoService;
     }
 
     public String login(UserDTO user){
@@ -36,7 +40,7 @@ public class UserService {
             String token = this.tokenService.generateToken(userFinded);
             return token;
         }else{
-            throw new RuntimeException("Username ou Password is wrong");
+            throw new RuntimeException("Username or Password is wrong");
         }
     }
 
@@ -59,11 +63,18 @@ public class UserService {
         Sort sort = Sort.by("username").descending();
         return userRepository.findAll(sort);
     }
-    public Optional<User> get(UUID id){
-        return userRepository.findById(id);
+    public User get(UUID id){
+        User user = userRepository.findById(id).orElseThrow(()-> new RuntimeException("User not found"));
+        Set<Todo> todos = todoService.getAllByUser(id);
+        user.addTodo(todos);
+        return user;
     }
     public void update(User user){
-        userRepository.save(user);
+        try{
+             userRepository.save(user);
+        }catch(Exception e){
+            throw new RuntimeException(e.getMessage());
+        }
     }
     public void delete(UUID id){
         userRepository.deleteById(id);

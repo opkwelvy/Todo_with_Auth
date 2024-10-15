@@ -7,6 +7,7 @@ import java.util.UUID;
 import br.com.todo.todo.dtos.UserDTO;
 import br.com.todo.todo.models.User;
 import br.com.todo.todo.services.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,15 +30,6 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/")
-    public ResponseEntity<Object> create(@RequestBody UserDTO user) {
-        try{
-            userService.create(user);
-            return ResponseEntity.ok().body(null);
-        }catch(Exception e){
-            return ResponseEntity.badRequest().body(null);
-        }
-    }
     @GetMapping("/list")
     public ResponseEntity<Object> getList(){
         try{
@@ -51,23 +43,24 @@ public class UserController {
     }
   
     
-    @GetMapping("/{id}")
-    public ResponseEntity<Object> get(@PathVariable UUID id) {
+    @GetMapping()
+    public ResponseEntity<Object> getUser(HttpServletRequest request) {
+        UUID userId = UUID.fromString(request.getAttribute("userId").toString());
         try{
-            var profile = userService.get(id);
+            var profile = userService.get(userId);
             return ResponseEntity.ok().body(profile);
         }catch(Exception e){
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    @PutMapping("/{id}")
+    @PutMapping()
     public ResponseEntity<Object> update(@RequestBody User user) {
         try{
             userService.update(user);
             return ResponseEntity.ok().body(null);
         }catch(Exception e){
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 

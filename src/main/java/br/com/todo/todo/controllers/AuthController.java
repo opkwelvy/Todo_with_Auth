@@ -23,7 +23,7 @@ public class AuthController {
             String token = this.userService.login(user);
             return ResponseEntity.ok(token);
         }catch(RuntimeException e){
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
     @PostMapping("/register")

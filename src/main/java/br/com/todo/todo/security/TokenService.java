@@ -35,7 +35,6 @@ public class TokenService {
     public UUID validateToken(String token) {
         try {
             Algorithm algorithm = Algorithm.HMAC256(secret);
-
             var validation = JWT.require(algorithm).withIssuer("login-auth").build().verify(token).getSubject();
             return UUID.fromString(validation);
         } catch (JWTVerificationException e) {

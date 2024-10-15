@@ -1,13 +1,17 @@
 package br.com.todo.todo.services;
 
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.Set;
 
+import org.hibernate.id.factory.internal.UUIDGenerationTypeStrategy;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import br.com.todo.todo.dtos.TodoDTO;
 import br.com.todo.todo.models.Todo;
+import br.com.todo.todo.models.User;
 import br.com.todo.todo.repository.TodoRepository;
 import br.com.todo.todo.repository.UserRepository;
 
@@ -18,39 +22,38 @@ public class TodoService {
 
     public TodoService(TodoRepository todoRepository, UserRepository userRepository) {
         this.todoRepository = todoRepository;
+        this.userRepository = userRepository;
     }
 
-    public List<Todo> create(TodoDTO todo) {
-        var user = userRepository.findById(todo.getUserId()).orElseThrow(()->{
-            throw null;
+    public Todo create(TodoDTO todo, Object userId) {
+        var user = userRepository.findById(UUID.fromString(userId.toString())).orElseThrow(()->{
+            throw new RuntimeException("User not found");
         });
-        Todo todoBuilded = new Todo(null, todo.getName(), todo.getDescription(), false, todo.getPriority(), null, user);
-        this.todoRepository.save(todoBuilded);
-        return getList();
+        Todo todoBuilded = new Todo(null, todo.getName(), todo.getDescription(), false, todo.getPriority(), new Date(), user);
+        todoRepository.save(todoBuilded);
+        return todoBuilded;
     }
 
-    public List<Todo> getAll(String ordenation) {
-        Sort sort;
-        if (ordenation == "name") {
-            sort = Sort.by("name").descending();
-        } else {
-            sort = Sort.by("priority").descending();
-        }
+    public Set<Todo> getAllByUser(UUID userId) {
+        var user = userRepository.findById(UUID.fromString(userId.toString())).orElseThrow(()->{
+            throw new RuntimeException("User not found");
+        });
 
-        return this.todoRepository.findAll(sort);
+        Set<Todo> todos = this.todoRepository.findByUser(user).orElseThrow();
+        return todos;
     }
 
-    public List<Todo> getList() {
-        return this.todoRepository.findAll();
-    }
-
-    public List<Todo> update(Todo todo) {
+    public Set<Todo> update(Todo todo, UUID userId) {
+        User user = userRepository.findById(UUID.fromString(userId.toString())).orElseThrow(()->{
+            throw new RuntimeException("User not found");
+        });
+        todo.setUser(user);
         this.todoRepository.save(todo);
-        return getList();
+        return getAllByUser(userId);
     }
 
-    public List<Todo> delete(UUID id) {
+    public Set<Todo> delete(UUID id, UUID userId) {
         this.todoRepository.deleteById(id);
-        return getList();
+        return getAllByUser(userId);
     }
 }
