@@ -7,11 +7,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import br.com.todo.todo.dtos.UserDTO;
 import br.com.todo.todo.services.UserService;
+
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/auth")
 public class AuthController {
     @Autowired
